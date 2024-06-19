@@ -25,11 +25,11 @@ This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV
 
     ```sh
     git clone https://github.com/chinawrj/wfa_ca_tlv_protol_dissector.git
-    ``` 
+    ```
 
 2. **Copy the Lua Script:**
 
-    Copy the `wfa.lua` script to your Wireshark plugins directory. The typical location is: 
+    Copy the `wfa.lua` script to your Wireshark plugins directory. The typical location is:
 
     - **Windows:** `C:\Program Files\Wireshark\plugins\`
     - **macOS:** `/Applications/Wireshark.app/Contents/Resources/share/wireshark/plugins/`
@@ -53,7 +53,7 @@ This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV
 
     ```plaintext
     tcp.port == 8000
-    ``` 
+    ```
 
 3. **Analyze Packets:**
 
@@ -62,6 +62,12 @@ This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV
 4. **Extend Functionality:**
 
     To support additional TLV formats, modify the Lua script and add the necessary parsing logic in the corresponding function.
+
+## Extending with GPTs
+
+To further enhance the functionality or to add support for new command types, you can use the provided GPTs link. This tool helps in generating new parsing logic based on the existing codebase.
+
+- [GPTs Link for Dissector Development](https://chatgpt.com/g/g-wFzFATssR-dissector-writer-for-wfa-control-agent-tlv-protol)
 
 ## Contributing
 
