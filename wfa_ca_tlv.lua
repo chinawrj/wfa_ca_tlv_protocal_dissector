@@ -1,10 +1,23 @@
--- 创建一个新的Dissector
+-- Define the TCP port to be parsed
 local tcp_port = 8000
+-- Define a new protocol dissector
 local my_proto = Proto("wfa_tlv", "WFA Control Agent TLV Protocol")
 
--- 定义字段
-local f_field1 = ProtoField.uint16("wfa_tlv.field1", "Field 1", base.DEC)
-local f_field2 = ProtoField.uint16("wfa_tlv.field2", "Field 2", base.DEC)
+-- Define the fields with value_string for field1 and gi to handle enum-like behavior
+local type_value_string = {
+    [73] = "WFA_STA_SET_RFEATURE_TLV",
+    [47] = "WFA_STA_DISCONNECT_TLV"
+}
+
+local gi_value_string = {
+    [0] = "HE_GI_NONE",
+    [1] = "HE_GI_0_8",
+    [2] = "HE_GI_1_6",
+    [3] = "HE_GI_3_2"
+}
+
+local f_field1 = ProtoField.uint16("wfa_tlv.field1", "Field 1 (Type Identifier)", base.DEC, type_value_string, 0xFFFF)
+local f_field2 = ProtoField.uint16("wfa_tlv.field2", "Field 2 (Length)", base.DEC)
 local f_intf_name = ProtoField.string("wfa_tlv.intf_name", "Interface Name")
 local f_prog = ProtoField.string("wfa_tlv.prog", "Program")
 local f_uapsd = ProtoField.uint32("wfa_tlv.uapsd", "UAPSD", base.DEC)
@@ -14,7 +27,7 @@ local f_tpktimer = ProtoField.uint32("wfa_tlv.tpktimer", "TPK Timer", base.DEC)
 local f_chswitchmode = ProtoField.string("wfa_tlv.chswitchmode", "Channel Switch Mode")
 local f_offchnum = ProtoField.int32("wfa_tlv.offchnum", "Off Channel Number")
 local f_secchoffset = ProtoField.string("wfa_tlv.secchoffset", "Secondary Channel Offset")
-local f_gi = ProtoField.string("wfa_tlv.gi", "Guard Interval")
+local f_gi = ProtoField.uint32("wfa_tlv.gi", "Guard Interval", base.DEC, gi_value_string, 0xFFFFFFFF)
 local f_mbo_non_pref_chan_valid = ProtoField.bool("wfa_tlv.mbo_non_pref_chan_valid", "MBO Non-pref Chan Valid")
 local f_padding2 = ProtoField.bytes("wfa_tlv.padding2", "Padding 2")
 local f_clear = ProtoField.uint8("wfa_tlv.clear", "Clear", base.DEC)
@@ -24,71 +37,62 @@ local f_preference = ProtoField.uint8("wfa_tlv.preference", "Preference", base.D
 local f_reason = ProtoField.uint8("wfa_tlv.reason", "Reason", base.DEC)
 local f_padding3 = ProtoField.bytes("wfa_tlv.padding3", "Padding 3")
 
+-- Add fields to the protocol fields list
 my_proto.fields = {f_field1, f_field2, f_intf_name, f_prog, f_uapsd, f_peer, f_padding1, f_tpktimer, f_chswitchmode, f_offchnum, f_secchoffset, f_gi, f_mbo_non_pref_chan_valid, f_padding2, f_clear, f_op_class, f_channel, f_preference, f_reason, f_padding3}
 
--- GI值映射
-local gi_map = {
-    [0] = "HE_GI_NONE",
-    [1] = "HE_GI_0_8",
-    [2] = "HE_GI_1_6",
-    [3] = "HE_GI_3_2"
-}
-
--- WFA_STA_SET_RFEATURE_TLV解析器
+-- Parse WFA_STA_SET_RFEATURE_TLV
 local function dissect_wfa_sta_set_rfeature(buffer, pinfo, tree, offset)
     local subtree = tree:add(my_proto, buffer(offset), "WFA STA SET RFEATURE TLV Data")
 
-    -- 解析interface name（16字节）
+    -- Parse Interface Name (16 bytes)
     subtree:add(f_intf_name, buffer(offset, 16):stringz())
     offset = offset + 16
 
-    -- 解析prog（8字节）
+    -- Parse Program (8 bytes)
     subtree:add(f_prog, buffer(offset, 8):stringz())
     offset = offset + 8
 
-    -- 解析uapsd（4字节）
+    -- Parse UAPSD (4 bytes)
     subtree:add_le(f_uapsd, buffer(offset, 4))
     offset = offset + 4
 
-    -- 解析peer（18字节）
+    -- Parse Peer (18 bytes)
     subtree:add(f_peer, buffer(offset, 18):stringz())
     offset = offset + 18
 
-    -- 跳过2字节填充
+    -- Skip 2 bytes padding
     subtree:add(f_padding1, buffer(offset, 2))
     offset = offset + 2
 
-    -- 解析tpktimer（4字节）
+    -- Parse TPK Timer (4 bytes)
     subtree:add_le(f_tpktimer, buffer(offset, 4))
     offset = offset + 4
 
-    -- 解析chswitchmode（16字节）
+    -- Parse Channel Switch Mode (16 bytes)
     subtree:add(f_chswitchmode, buffer(offset, 16):stringz())
     offset = offset + 16
 
-    -- 解析offchnum（4字节）
+    -- Parse Off Channel Number (4 bytes)
     subtree:add_le(f_offchnum, buffer(offset, 4))
     offset = offset + 4
 
-    -- 解析secchoffset（16字节）
+    -- Parse Secondary Channel Offset (16 bytes)
     subtree:add(f_secchoffset, buffer(offset, 16):stringz())
     offset = offset + 16
 
-    -- 解析gi（4字节）
-    local gi_value = buffer(offset, 4):le_uint()
-    local gi_string = gi_map[gi_value] or "UNKNOWN"
-    subtree:add(f_gi, buffer(offset, 4)):append_text(" (" .. gi_string .. ")")
+    -- Parse Guard Interval (4 bytes) using the enum-like value string
+    subtree:add_packet_field(f_gi, buffer(offset, 4), ENC_LITTLE_ENDIAN)
     offset = offset + 4
 
-    -- 解析mbo_non_pref_chan_valid（1字节）
+    -- Parse MBO Non-pref Chan Valid (1 byte)
     subtree:add_le(f_mbo_non_pref_chan_valid, buffer(offset, 1))
     offset = offset + 1
 
-    -- 跳过3字节填充
+    -- Skip 3 bytes padding
     subtree:add(f_padding2, buffer(offset, 3))
     offset = offset + 3
 
-    -- 解析mbo_non_pref_chan
+    -- Parse MBO Non-pref Chan
     subtree:add_le(f_clear, buffer(offset, 1))
     offset = offset + 1
     subtree:add_le(f_op_class, buffer(offset, 1))
@@ -100,52 +104,51 @@ local function dissect_wfa_sta_set_rfeature(buffer, pinfo, tree, offset)
     subtree:add_le(f_reason, buffer(offset, 1))
     offset = offset + 1
 
-    -- 跳过末尾3字节填充
+    -- Skip 3 bytes padding at the end
     subtree:add(f_padding3, buffer(offset, 3))
 end
 
--- WFA_STA_DISCONNECT_TLV解析器（占位，具体解析逻辑可以根据需求添加）
+-- Placeholder for WFA_STA_DISCONNECT_TLV parser, add specific parsing logic as needed
 local function dissect_wfa_sta_disconnect(buffer, pinfo, tree, offset)
     local subtree = tree:add(my_proto, buffer(offset), "WFA STA DISCONNECT TLV Data")
-    -- 根据需求解析字段
-    -- 这里假设disconnect TLV只包含一个简单的字段
+    -- Parse fields as needed, assuming the disconnect TLV contains only one simple field here
     -- subtree:add(f_some_field, buffer(offset, 2):le_uint())
     -- offset = offset + 2
 end
 
--- TLV解析器
+-- Main TLV parser
 function my_proto.dissector(buffer, pinfo, tree)
     pinfo.cols.protocol = my_proto.name
     local subtree = tree:add(my_proto, buffer(), "WFA TLV Data")
 
     local offset = 0
 
-    -- 检查是否有足够的数据
-    if buffer:len() < 116 then  -- 总共需要116字节
+    -- Check if there is enough data
+    if buffer:len() < 116 then  -- A total of 116 bytes is needed
         subtree:add_expert_info(PI_MALFORMED, PI_ERROR, "Not enough data for the required fields")
         return
     end
 
-    -- 解析field1
-    local field1 = buffer(offset, 2):le_uint()
-    subtree:add_le(f_field1, buffer(offset, 2))
+    -- Parse Field 1 (Type Identifier) using little-endian format
+    local field1_value = buffer(offset, 2):le_uint() -- Read Field 1 in little-endian format
+    subtree:add_packet_field(f_field1, buffer(offset, 2), ENC_LITTLE_ENDIAN)
     offset = offset + 2
 
-    -- 解析field2
-    subtree:add_le(f_field2, buffer(offset, 2))
+    -- Parse Field 2 (Length) using little-endian format
+    local field2_value = buffer(offset, 2):le_uint() -- Read Field 2 in little-endian format
+    subtree:add_packet_field(f_field2, buffer(offset, 2), ENC_LITTLE_ENDIAN)
     offset = offset + 2
 
-    -- 根据field1的值选择不同的解析路径
-    if field1 == 73 then  -- WFA_STA_SET_RFEATURE_TLV
+    -- Choose different parsing paths based on the value of Field 1
+    if field1_value == 73 then  -- WFA_STA_SET_RFEATURE_TLV
         dissect_wfa_sta_set_rfeature(buffer, pinfo, subtree, offset)
-    elseif field1 == 47 then  -- WFA_STA_DISCONNECT_TLV
+    elseif field1_value == 47 then  -- WFA_STA_DISCONNECT_TLV
         dissect_wfa_sta_disconnect(buffer, pinfo, subtree, offset)
     else
         subtree:add_expert_info(PI_MALFORMED, PI_ERROR, "Unknown TLV type")
     end
 end
 
--- 注册到特定端口
+-- Register the dissector to the specific port
 local tcp_table = DissectorTable.get("tcp.port")
 tcp_table:add(tcp_port, my_proto)
-
