@@ -4,6 +4,8 @@
 
 This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV Protocol. The dissector is designed to parse TLV-formatted packets transmitted over TCP on port 8000, particularly for fields such as `WFA_STA_SET_RFEATURE_TLV` and `WFA_STA_DISCONNECT_TLV`.
 
+![Dissector Example](./dissector.png)
+
 ## Features
 
 - **Flexible Protocol Parsing:** Supports multiple TLV formats based on `Field 1` value.
@@ -23,11 +25,11 @@ This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV
 
     ```sh
     git clone https://github.com/chinawrj/wfa_ca_tlv_protol_dissector.git
-    ```
+    ``` 
 
 2. **Copy the Lua Script:**
 
-    Copy the `wfa.lua` script to your Wireshark plugins directory. The typical location is:
+    Copy the `wfa.lua` script to your Wireshark plugins directory. The typical location is: 
 
     - **Windows:** `C:\Program Files\Wireshark\plugins\`
     - **macOS:** `/Applications/Wireshark.app/Contents/Resources/share/wireshark/plugins/`
@@ -51,7 +53,7 @@ This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV
 
     ```plaintext
     tcp.port == 8000
-    ```
+    ``` 
 
 3. **Analyze Packets:**
 
@@ -82,3 +84,4 @@ Special thanks to the Wireshark community for their comprehensive documentation 
 ## Contact
 
 For further questions or support, issue case for me.
+
