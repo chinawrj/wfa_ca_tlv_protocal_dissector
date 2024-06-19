@@ -1,6 +1,6 @@
 # Wireshark Lua Dissector for WFA Control Agent TLV Protocol
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Anti%20996-red.svg)](LICENSE)
 
 This repository contains a Wireshark Lua dissector for the WFA Control Agent TLV Protocol. The dissector is designed to parse TLV-formatted packets transmitted over TCP on port 8000, particularly for fields such as `WFA_STA_SET_RFEATURE_TLV` and `WFA_STA_DISCONNECT_TLV`.
 
@@ -81,7 +81,7 @@ Contributions are welcome! If you have any suggestions for improvement or encoun
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Anti 996 License. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
@@ -90,4 +90,3 @@ Special thanks to the Wireshark community for their comprehensive documentation 
 ## Contact
 
 For further questions or support, issue case for me.
-
